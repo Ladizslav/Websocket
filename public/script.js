@@ -1,57 +1,63 @@
-let isUpdating = false;
+const socket = io();
+const editor = document.getElementById('editor');
+const status = document.getElementById('connection-status');
+const usersList = document.getElementById('users');
 
-function saveCaretPosition(editableDiv) {
-    const selection = window.getSelection();
-    const range = selection.getRangeAt(0);
-    const preCaretRange = range.cloneRange();
-    preCaretRange.selectNodeContents(editableDiv);
-    preCaretRange.setEnd(range.endContainer, range.endOffset);
-    return preCaretRange.toString().length; 
-}
+let isUpdating = false; 
 
-function restoreCaretPosition(editableDiv, position) {
-    const selection = window.getSelection();
-    const range = document.createRange();
-    let currentPos = 0;
+socket.on('connect', () => {
+    status.textContent = 'Připojeno';
+});
+socket.on('disconnect', () => {
+    status.textContent = 'Nepřipojeno';
+});
 
-    function traverseNodes(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-            const textLength = node.textContent.length;
-            if (currentPos + textLength >= position) {
-                range.setStart(node, position - currentPos);
-                range.collapse(true);
-                return true;
-            }
-            currentPos += textLength;
-        } else {
-            for (let i = 0; i < node.childNodes.length; i++) {
-                if (traverseNodes(node.childNodes[i])) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    traverseNodes(editableDiv);
-    selection.removeAllRanges();
-    selection.addRange(range);
-}
+socket.on('clients-update', (clients) => {
+    usersList.innerHTML = 'Připojení uživatelé:<br>' + clients.map(client => client.name).join('<br>');
+});
 
 socket.on('document', (content) => {
     if (!isUpdating) {
-        const caretPosition = saveCaretPosition(editor); 
-        editor.innerText = content; 
-        restoreCaretPosition(editor, caretPosition); 
+        editor.innerText = content;
+    }
+});
+
+socket.on('patch', (patches) => {
+    const dmp = new diff_match_patch();
+    documentContent = editor.innerText;
+    const [updatedContent] = dmp.patch_apply(patches, documentContent);
+    editor.innerText = updatedContent;
+});
+
+socket.on('cursor', ({ id, position }) => {
+    const existingCursor = document.getElementById(`cursor-${id}`);
+    if (existingCursor) {
+        existingCursor.style.left = `${position.left}px`;
+        existingCursor.style.top = `${position.top}px`;
+    } else {
+        const cursor = document.createElement('div');
+        cursor.id = `cursor-${id}`;
+        cursor.className = 'cursor';
+        cursor.style.left = `${position.left}px`;
+        cursor.style.top = `${position.top}px`;
+        document.body.appendChild(cursor);
     }
 });
 
 editor.addEventListener('input', () => {
-    isUpdating = true; 
+    isUpdating = true;
     const content = editor.innerText;
-    socket.emit('edit', { content });
+    socket.emit('edit', content);
 
     setTimeout(() => {
         isUpdating = false;
-    }, 5000);
+    }, 500);
+});
+
+editor.addEventListener('keyup', () => {
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0).getBoundingClientRect();
+    socket.emit('cursor', {
+        position: { left: range.left, top: range.top }
+    });
 });
