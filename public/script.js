@@ -1,4 +1,4 @@
-const socket = io();
+const socket = io(); 
 const editor = document.getElementById('editor');
 const status = document.getElementById('connection-status');
 const usersList = document.getElementById('users');
@@ -13,7 +13,7 @@ socket.on('disconnect', () => {
 });
 
 socket.on('clients-update', (clients) => {
-    usersList.innerHTML = 'Připojení uživatelé:<br>' + clients.map(client => client.name).join('<br>');
+    usersList.innerHTML = 'Připojení uživatelé:<br>' + clients.map(client => client.ip).join('<br>');
 });
 
 socket.on('document', (content) => {

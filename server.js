@@ -14,10 +14,10 @@ let clients = [];
 app.use(express.static('public'));
 
 io.on('connection', (socket) => {
-    console.log(`Uživatel připojen: ${socket.id}`);
+    const userIp = socket.handshake.address; 
+    console.log(`Uživatel připojen z IP: ${userIp}`);
 
-    const userName = `Uživatel-${clients.length + 1}`;
-    clients.push({ id: socket.id, name: userName });
+    clients.push({ id: socket.id, ip: userIp });
     io.emit('clients-update', clients); 
 
     socket.emit('document', documentContent);
@@ -40,7 +40,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// Spuštění serveru
 const PORT = 8080;
 server.listen(PORT, () => {
     console.log(`Server běží na http://localhost:${PORT}`);
