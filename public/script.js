@@ -1,4 +1,5 @@
 const socket = io(); 
+let isUpdating = false;
 
 const editor = document.getElementById('editor');
 const userList = document.getElementById('user-list');
@@ -15,7 +16,9 @@ socket.on('disconnect', () => {
 });
 
 socket.on('document', (content) => {
-    editor.innerText = content;
+    if (!isUpdating) { 
+        editor.innerText = content;
+    }
 });
 
 socket.on('clients-update', (clients) => {
@@ -34,6 +37,11 @@ socket.on('patch', (patches) => {
 });
 
 editor.addEventListener('input', () => {
+    isUpdating = true; 
     const content = editor.innerText;
     socket.emit('edit', { content });
+
+    setTimeout(() => {
+        isUpdating = false;
+    }, 500); 
 });

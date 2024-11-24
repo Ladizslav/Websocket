@@ -9,7 +9,7 @@ const io = new Server(server);
 
 const dmp = new diff_match_patch();
 let documentContent = ''; 
-let clients = []; 
+let clients = [];
 
 app.use(express.static('public'));
 
@@ -24,6 +24,7 @@ io.on('connection', (socket) => {
     socket.on('edit', (data) => {
         const patches = dmp.patch_make(documentContent, data.content);
         documentContent = dmp.patch_apply(patches, documentContent)[0];
+
         socket.broadcast.emit('patch', patches);
     });
 
@@ -33,6 +34,10 @@ io.on('connection', (socket) => {
         io.emit('clients-update', clients);
     });
 });
+
+setInterval(() => {
+    io.emit('document', documentContent);
+}, 1000); 
 
 const PORT = 8080;
 server.listen(PORT, () => {
