@@ -43,5 +43,5 @@ editor.addEventListener('input', () => {
 
     setTimeout(() => {
         isUpdating = false;
-    }, 500); 
+    }, 10000); 
 });
