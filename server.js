@@ -37,7 +37,7 @@ io.on('connection', (socket) => {
 
 setInterval(() => {
     io.emit('document', documentContent);
-}, 10000); 
+}, 1000); 
 
 const PORT = 8080;
 server.listen(PORT, () => {
