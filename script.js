@@ -6,14 +6,20 @@ const usersDiv = document.getElementById('users');
 const cursors = {};
 const highlights = {};
 
+editor.disabled = true;
+
 ws.onopen = () => {
     status.textContent = "Connected to server";
     status.style.color = "green";
+
+    editor.disabled = false;
 };
 
 ws.onclose = () => {
     status.textContent = "Disconnected from server";
     status.style.color = "red";
+
+    editor.disabled = true;
 };
 
 ws.onmessage = (event) => {
@@ -69,30 +75,36 @@ ws.onmessage = (event) => {
 };
 
 editor.addEventListener('input', () => {
-    ws.send(JSON.stringify({ type: 'update_text', text: editor.value }));
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'update_text', text: editor.value }));
+    }
 });
 
 editor.addEventListener('mouseup', () => {
-    const rect = editor.getBoundingClientRect();
-    const selection = window.getSelection();
-    const range = selection.getRangeAt(0).getBoundingClientRect();
+    if (ws.readyState === WebSocket.OPEN) {
+        const rect = editor.getBoundingClientRect();
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0).getBoundingClientRect();
 
-    ws.send(JSON.stringify({
-        type: 'selection',
-        selection: {
-            startX: range.left - rect.left,
-            startY: range.top - rect.top,
-            endX: range.right - rect.left,
-            endY: range.bottom - rect.top,
-        }
-    }));
+        ws.send(JSON.stringify({
+            type: 'selection',
+            selection: {
+                startX: range.left - rect.left,
+                startY: range.top - rect.top,
+                endX: range.right - rect.left,
+                endY: range.bottom - rect.top,
+            }
+        }));
+    }
 });
 
 editor.addEventListener('mousemove', (event) => {
-    const rect = editor.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    ws.send(JSON.stringify({ type: 'cursor_position', position: { x, y } }));
+    if (ws.readyState === WebSocket.OPEN) {
+        const rect = editor.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        ws.send(JSON.stringify({ type: 'cursor_position', position: { x, y } }));
+    }
 });
 
 function updateUsers(users) {
