@@ -1,4 +1,4 @@
-const ws = new WebSocket("ws://<public-ip>:8080");
+const ws = new WebSocket("ws://localhost:8080");
 const editor = document.getElementById('editor');
 const editorContainer = document.getElementById('editor-container');
 const connectionStatus = document.getElementById('connection-status');
