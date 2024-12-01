@@ -1,0 +1,114 @@
+body {
+    font-family: 'Verdana', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #2b2d42;
+    color: #edf2f4;
+}
+
+header {
+    background-color: #8d99ae;
+    color: #2b2d42;
+    padding: 1.5rem 2rem;
+    text-align: center;
+    border-bottom: 4px solid #ef233c;
+}
+
+h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 3rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+#editor-container {
+    position: relative;
+    width: 100%;
+    margin-top: 1.5rem;
+}
+
+#editor {
+    width: 100%;
+    height: 400px;
+    border: 3px solid #ef233c;
+    border-radius: 12px;
+    padding: 1.5rem;
+    font-size: 1.1rem;
+    background-color: #edf2f4;
+    color: #2b2d42;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    line-height: 1.7;
+    font-family: 'Courier New', monospace;
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    resize: none;
+}
+
+.highlight {
+    position: absolute;
+    background-color: rgba(239, 35, 60, 0.3);
+    pointer-events: none;
+    z-index: 5;
+    border-radius: 4px;
+}
+
+.cursor {
+    position: absolute;
+    width: 2px;
+    height: 1.6em;
+    background-color: #ef233c;
+    z-index: 20;
+    pointer-events: none;
+    animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+#status {
+    margin-top: 1.5rem;
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+#users {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #8d99ae;
+    border: 2px solid #ef233c;
+    border-radius: 12px;
+    width: 100%;
+    text-align: left;
+    font-size: 1rem;
+    color: #2b2d42;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.user {
+    font-weight: bold;
+    color: #ef233c;
+}
+
+footer {
+    margin-top: 3rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #edf2f4;
+    padding: 1rem 0;
+    border-top: 2px solid #8d99ae;
+}
