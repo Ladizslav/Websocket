@@ -1,7 +1,7 @@
 const ws = new WebSocket("ws://<public-ip>:8080");
 const editor = document.getElementById('editor');
 const editorContainer = document.getElementById('editor-container');
-const status = document.getElementById('status');
+const connectionStatus = document.getElementById('connection-status');
 const usersDiv = document.getElementById('users');
 const cursors = {};
 const highlights = {};
@@ -9,17 +9,13 @@ const highlights = {};
 editor.disabled = true;
 
 ws.onopen = () => {
-    status.textContent = "Connected to server";
-    status.style.color = "green";
-
-    editor.disabled = false;
+    connectionStatus.textContent = "Connected to server";
+    connectionStatus.style.color = "green";
 };
 
 ws.onclose = () => {
-    status.textContent = "Disconnected from server";
-    status.style.color = "red";
-
-    editor.disabled = true;
+    connectionStatus.textContent = "Disconnected from server";
+    connectionStatus.style.color = "red";
 };
 
 ws.onmessage = (event) => {
