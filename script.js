@@ -6,6 +6,26 @@ const usersDiv = document.getElementById('users');
 const cursors = {};
 const highlights = {};
 
+function disableEditor() {
+    editor.disabled = true;
+    status.textContent = "Disconnected from server";
+    status.style.color = "red";
+}
+
+function enableEditor() {
+    editor.disabled = false;
+    status.textContent = "Connected to server";
+    status.style.color = "green";
+}
+
+ws.onclose = () => {
+    disableEditor();
+};
+
+ws.onopen = () => {
+    enableEditor();
+};
+
 socket.on('connect', () => {
     status.textContent = "Connected to server";
     status.style.color = "green";
