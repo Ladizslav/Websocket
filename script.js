@@ -18,22 +18,12 @@ function enableEditor() {
     status.style.color = "green";
 }
 
-ws.onclose = () => {
+socket.on('disconnect', () => {
     disableEditor();
-};
-
-ws.onopen = () => {
-    enableEditor();
-};
-
-socket.on('connect', () => {
-    status.textContent = "Connected to server";
-    status.style.color = "green";
 });
 
-socket.on('disconnect', () => {
-    status.textContent = "Disconnected from server";
-    status.style.color = "red";
+socket.on('connect', () => {
+    enableEditor();
 });
 
 socket.on('init', (data) => {
