@@ -103,6 +103,13 @@ editor.addEventListener('mousemove', (event) => {
     }
 });
 
+ws.onerror = (error) => {
+    console.error("WebSocket error:", error);
+    connectionStatus.textContent = "Error connecting to server";
+    connectionStatus.style.color = "orange";
+};
+
+
 function updateUsers(users) {
     usersDiv.innerHTML = `Connected users: ${users.map(u => `<span class="user">${u.userId}</span>`).join(', ')}`;
 }

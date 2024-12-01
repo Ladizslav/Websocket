@@ -17,6 +17,11 @@ let documentText = "";
 let users = [];
 
 wss.on('connection', (ws) => {
+    console.log("A client connected.");
+    ws.on('close', () => {
+        console.log("A client disconnected.");
+    });
+
     const userId = `User-${Math.random().toString(36).substr(2, 9)}`;
     const userColor = `hsl(${Math.floor(Math.random() * 360)}, 70%, 70%)`;
     users.push({ userId, userColor });
