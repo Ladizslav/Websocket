@@ -5,56 +5,64 @@ const status = document.getElementById('status');
 const usersDiv = document.getElementById('users');
 const cursors = {};
 const highlights = {};
-let localCache = { text: '', selection: null };
 
+// Cache pro místní ukládání
+const cache = {
+    text: localStorage.getItem('cachedText') || "",
+    selections: JSON.parse(localStorage.getItem('cachedSelections')) || []
+};
+
+// Funkce pro uložení cache do localStorage
+function saveToCache() {
+    localStorage.setItem('cachedText', cache.text);
+    localStorage.setItem('cachedSelections', JSON.stringify(cache.selections));
+}
+
+// Funkce pro synchronizaci s cache
+function syncWithCache() {
+    editor.value = cache.text;
+    cache.selections.forEach((selection) => applyHighlight(selection));
+}
+
+// Zakázání editoru
 function disableEditor() {
     editor.disabled = true;
     status.textContent = "Disconnected from server";
     status.style.color = "red";
-    saveToCache();
 }
 
+// Povolení editoru
 function enableEditor() {
     editor.disabled = false;
     status.textContent = "Connected to server";
     status.style.color = "green";
-    syncWithCache();
 }
 
-function saveToCache() {
-    localCache.text = editor.value;
-    localStorage.setItem('editorCache', JSON.stringify(localCache));
-}
+socket.on('connect', () => {
+    enableEditor();
 
-function loadFromCache() {
-    const cachedData = localStorage.getItem('editorCache');
-    if (cachedData) {
-        localCache = JSON.parse(cachedData);
-        editor.value = localCache.text;
+    // Při opětovném připojení synchronizovat cache
+    if (cache.text) {
+        socket.emit('update_text', { text: cache.text });
     }
-}
-
-function syncWithCache() {
-    if (localCache.text && localCache.text !== editor.value) {
-        socket.emit('update_text', { text: localCache.text });
-    }
-}
+});
 
 socket.on('disconnect', () => {
     disableEditor();
 });
 
-socket.on('connect', () => {
-    enableEditor();
-});
-
 socket.on('init', (data) => {
     editor.value = data.text;
+    cache.text = data.text;
+    cache.selections = [];
+    saveToCache();
     updateUsers(data.users);
 });
 
 socket.on('update_text', (data) => {
     editor.value = data.text;
+    cache.text = data.text;
+    saveToCache();
 });
 
 socket.on('user_connected', (users) => {
@@ -79,46 +87,55 @@ socket.on('cursor_position', (data) => {
 });
 
 socket.on('selection', (data) => {
-    if (!highlights[data.userId]) {
-        const highlight = document.createElement('div');
-        highlight.className = 'highlight';
-        highlight.style.backgroundColor = data.userColor;
-        editorContainer.appendChild(highlight);
-        highlights[data.userId] = highlight;
-    }
-    const highlight = highlights[data.userId];
-    const rect = editor.getBoundingClientRect();
-    const lineHeight = parseFloat(getComputedStyle(editor).lineHeight);
-
-    highlight.style.left = `${rect.left + data.selection.startX}px`;
-    highlight.style.width = `${data.selection.endX - data.selection.startX}px`;
-    highlight.style.top = `${rect.top + data.selection.startY}px`;
-    highlight.style.height = `${data.selection.endY - data.selection.startY}px`;
+    applyHighlight(data.selection, data.userId, data.userColor);
 });
 
-editor.addEventListener('input', () => {
-    socket.emit('update_text', { text: editor.value });
+// Funkce pro aplikaci zvýraznění
+function applyHighlight(selection, userId, userColor) {
+    if (!highlights[userId]) {
+        const highlight = document.createElement('div');
+        highlight.className = 'highlight';
+        highlight.style.backgroundColor = userColor;
+        editorContainer.appendChild(highlight);
+        highlights[userId] = highlight;
+    }
+    const highlight = highlights[userId];
+    const rect = editor.getBoundingClientRect();
+    highlight.style.left = `${rect.left + selection.startX}px`;
+    highlight.style.width = `${selection.endX - selection.startX}px`;
+    highlight.style.top = `${rect.top + selection.startY}px`;
+    highlight.style.height = `${selection.endY - selection.startY}px`;
+
+    // Uložení do cache
+    cache.selections.push(selection);
     saveToCache();
+}
+
+editor.addEventListener('input', () => {
+    cache.text = editor.value;
+    saveToCache();
+    socket.emit('update_text', { text: editor.value });
 });
 
 editor.addEventListener('mouseup', () => {
     const rect = editor.getBoundingClientRect();
     const selection = window.getSelection();
-    const range = selection.getRangeAt(0).getBoundingClientRect();
+    if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0).getBoundingClientRect();
 
-    const selectionData = {
-        selection: {
+        const selectionData = {
             startX: range.left - rect.left,
             startY: range.top - rect.top,
             endX: range.right - rect.left,
             endY: range.bottom - rect.top,
-        }
-    };
+        };
 
-    localCache.selection = selectionData;
-    saveToCache();
+        socket.emit('selection', { selection: selectionData });
 
-    socket.emit('selection', selectionData);
+        // Uložení do cache
+        cache.selections.push(selectionData);
+        saveToCache();
+    }
 });
 
 editor.addEventListener('mousemove', (event) => {
@@ -131,11 +148,3 @@ editor.addEventListener('mousemove', (event) => {
 function updateUsers(users) {
     usersDiv.innerHTML = `Connected users: ${users.map(u => `<span class="user">${u.userId}</span>`).join(', ')}`;
 }
-
-window.addEventListener('load', () => {
-    loadFromCache();
-});
-
-window.addEventListener('beforeunload', () => {
-    saveToCache();
-});
