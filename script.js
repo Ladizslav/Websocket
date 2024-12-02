@@ -21,7 +21,7 @@ function saveToCache() {
 // Funkce pro synchronizaci s cache
 function syncWithCache() {
     editor.value = cache.text;
-    cache.selections.forEach((selection) => applyHighlight(selection));
+    cache.selections.forEach(selection => applyHighlight(selection));
 }
 
 // Zakázání editoru
@@ -90,7 +90,6 @@ socket.on('selection', (data) => {
     applyHighlight(data.selection, data.userId, data.userColor);
 });
 
-// Funkce pro aplikaci zvýraznění
 function applyHighlight(selection, userId, userColor) {
     if (!highlights[userId]) {
         const highlight = document.createElement('div');
@@ -106,7 +105,6 @@ function applyHighlight(selection, userId, userColor) {
     highlight.style.top = `${rect.top + selection.startY}px`;
     highlight.style.height = `${selection.endY - selection.startY}px`;
 
-    // Uložení do cache
     cache.selections.push(selection);
     saveToCache();
 }
@@ -132,7 +130,6 @@ editor.addEventListener('mouseup', () => {
 
         socket.emit('selection', { selection: selectionData });
 
-        // Uložení do cache
         cache.selections.push(selectionData);
         saveToCache();
     }
