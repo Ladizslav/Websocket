@@ -120,18 +120,16 @@ editor.addEventListener('mouseup', () => {
     const selection = window.getSelection();
     if (selection.rangeCount > 0) {
         const range = selection.getRangeAt(0).getBoundingClientRect();
+        if (range.width > 0 && range.height > 0) {
+            const selectionData = {
+                startX: range.left - rect.left,
+                startY: range.top - rect.top,
+                endX: range.right - rect.left,
+                endY: range.bottom - rect.top,
+            };
 
-        const selectionData = {
-            startX: range.left - rect.left,
-            startY: range.top - rect.top,
-            endX: range.right - rect.left,
-            endY: range.bottom - rect.top,
-        };
-
-        socket.emit('selection', { selection: selectionData });
-
-        cache.selections.push(selectionData);
-        saveToCache();
+            socket.emit('selection', { selection: selectionData });
+        }
     }
 });
 

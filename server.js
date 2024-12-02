@@ -39,11 +39,13 @@ io.on('connection', (socket) => {
     });
 
     socket.on('selection', (data) => {
+        console.log('Received selection from client:', data);
         io.emit('selection', {
             userId,
             selection: data.selection,
             userColor
         });
+        console.log('Broadcasting selection:', { userId, selection: data.selection, userColor }); // Log pro přenos
     });
 
     socket.on('disconnect', () => {
