@@ -5,17 +5,39 @@ const status = document.getElementById('status');
 const usersDiv = document.getElementById('users');
 const cursors = {};
 const highlights = {};
+let localCache = { text: '', selection: null };
 
 function disableEditor() {
     editor.disabled = true;
     status.textContent = "Disconnected from server";
     status.style.color = "red";
+    saveToCache();
 }
 
 function enableEditor() {
     editor.disabled = false;
     status.textContent = "Connected to server";
     status.style.color = "green";
+    syncWithCache();
+}
+
+function saveToCache() {
+    localCache.text = editor.value;
+    localStorage.setItem('editorCache', JSON.stringify(localCache));
+}
+
+function loadFromCache() {
+    const cachedData = localStorage.getItem('editorCache');
+    if (cachedData) {
+        localCache = JSON.parse(cachedData);
+        editor.value = localCache.text;
+    }
+}
+
+function syncWithCache() {
+    if (localCache.text && localCache.text !== editor.value) {
+        socket.emit('update_text', { text: localCache.text });
+    }
 }
 
 socket.on('disconnect', () => {
@@ -76,6 +98,7 @@ socket.on('selection', (data) => {
 
 editor.addEventListener('input', () => {
     socket.emit('update_text', { text: editor.value });
+    saveToCache();
 });
 
 editor.addEventListener('mouseup', () => {
@@ -83,14 +106,19 @@ editor.addEventListener('mouseup', () => {
     const selection = window.getSelection();
     const range = selection.getRangeAt(0).getBoundingClientRect();
 
-    socket.emit('selection', {
+    const selectionData = {
         selection: {
             startX: range.left - rect.left,
             startY: range.top - rect.top,
             endX: range.right - rect.left,
             endY: range.bottom - rect.top,
         }
-    });
+    };
+
+    localCache.selection = selectionData;
+    saveToCache();
+
+    socket.emit('selection', selectionData);
 });
 
 editor.addEventListener('mousemove', (event) => {
@@ -103,3 +131,11 @@ editor.addEventListener('mousemove', (event) => {
 function updateUsers(users) {
     usersDiv.innerHTML = `Connected users: ${users.map(u => `<span class="user">${u.userId}</span>`).join(', ')}`;
 }
+
+window.addEventListener('load', () => {
+    loadFromCache();
+});
+
+window.addEventListener('beforeunload', () => {
+    saveToCache();
+});
